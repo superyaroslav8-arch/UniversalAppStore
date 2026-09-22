@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UniversalAppStore — Умный магазин открытых приложений</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6366f1',
+            accent: '#22d3ee'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background: #0f172a; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(99,102,241,0.3); }
+    .search-glow:focus { box-shadow: 0 0 0 3px rgba(99,102,241,0.4); }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur border-b border-slate-700">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center font-bold text-xl">U</div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight">UniversalAppStore</h1>
+          <p class="text-xs text-slate-400">Открытые приложения для всех устройств</p>
+        </div>
+      </div>
+      <div class="flex-1 max-w-xl w-full">
+        <input id="searchInput" type="search" placeholder="ИИ-поиск: название, платформа, функция..." 
+               class="w-full px-5 py-3 rounded-2xl bg-slate-800 border border-slate-600 focus:border-indigo-500 outline-none search-glow transition" />
+      </div>
+      <div class="flex gap-2 text-sm">
+        <button onclick="showSection('catalog')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 transition">Каталог</button>
+        <button onclick="showSection('guides')" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 transition">Установка</button>
+        <button onclick="showSection('platforms')" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 transition">Платформы</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Stats -->
+    <div id="stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-slate-800/60 rounded-2xl p-4 text-center border border-slate-700">
+        <div class="text-2xl font-bold text-cyan-400" id="statApps">0</div>
+        <div class="text-xs text-slate-400">Приложений</div>
+      </div>
+      <div class="bg-slate-800/60 rounded-2xl p-4 text-center border border-slate-700">
+        <div class="text-2xl font-bold text-indigo-400">8+</div>
+        <div class="text-xs text-slate-400">Платформ</div>
+      </div>
+      <div class="bg-slate-800/60 rounded-2xl p-4 text-center border border-slate-700">
+        <div class="text-2xl font-bold text-emerald-400">100%</div>
+        <div class="text-xs text-slate-400">Бесплатно</div>
+      </div>
+      <div class="bg-slate-800/60 rounded-2xl p-4 text-center border border-slate-700">
+        <div class="text-2xl font-bold text-amber-400">Open</div>
+        <div class="text-xs text-slate-400">Source</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div id="filters" class="flex flex-wrap gap-2 mb-6">
+      <button data-platform="all" class="platform-btn active px-4 py-1.5 rounded-full text-sm bg-indigo-600">Все</button>
+      <button data-platform="ios" class="platform-btn px-4 py-1.5 rounded-full text-sm bg-slate-700 hover:bg-slate-600">iOS / iPad</button>
+      <button data-platform="android" class="platform-btn px-4 py-1.5 rounded-full text-sm bg-slate-700 hover:bg-slate-600">Android</button>
+      <button data-platform="windows" class="platform-btn px-4 py-1.5 rounded-full text-sm bg-slate-700 hover:bg-slate-600">Windows</button>
+      <button data-platform="macos" class="platform-btn px-4 py-1.5 rounded-full text-sm bg-slate-700 hover:bg-slate-600">macOS</button>
+      <button data-platform="linux" class="platform-btn px-4 py-1.5 rounded-full text-sm bg-slate-700 hover:bg-slate-600">Linux</button>
+      <button data-platform="watch" class="platform-btn px-4 py-1.5 rounded-full text-sm bg-slate-700 hover:bg-slate-600">Watch</button>
+      <button data-platform="web" class="platform-btn px-4 py-1.5 rounded-full text-sm bg-slate-700 hover:bg-slate-600">Web / PWA</button>
+    </div>
+
+    <!-- Catalog -->
+    <section id="catalog">
+      <div id="resultsCount" class="text-sm text-slate-400 mb-4"></div>
+      <div id="appGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+    </section>
+
+    <!-- Guides -->
+    <section id="guides" class="hidden space-y-6">
+      <h2 class="text-2xl font-bold">Как устанавливать приложения</h2>
+      <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+        <h3 class="text-lg font-semibold text-cyan-400 mb-2">iPhone / iPad (без джейлбрейка)</h3>
+        <ol class="list-decimal list-inside space-y-2 text-slate-300">
+          <li>Установи <a href="https://sidestore.io" class="text-indigo-400 underline" target="_blank">SideStore</a> или AltStore</li>
+          <li>Скачай IPA файла приложения (если доступен)</li>
+          <li>Открой SideStore → «+» → выбери IPA</li>
+          <li>Подпиши своим Apple ID (бесплатно, 7 дней)</li>
+          <li>Для постоянного — LiveContainer или платный сертификат</li>
+        </ol>
+      </div>
+      <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+        <h3 class="text-lg font-semibold text-cyan-400 mb-2">Android</h3>
+        <p class="text-slate-300">Просто скачай APK и разреши установку из неизвестных источников. Или используй F-Droid для открытого ПО.</p>
+      </div>
+      <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+        <h3 class="text-lg font-semibold text-cyan-400 mb-2">Windows / macOS / Linux</h3>
+        <p class="text-slate-300">Скачивай установщики с официальных страниц проектов (GitHub Releases). Для Linux — пакетные менеджеры или AppImage/Flatpak.</p>
+      </div>
+    </section>
+
+    <!-- Platforms -->
+    <section id="platforms" class="hidden">
+      <h2 class="text-2xl font-bold mb-6">Поддерживаемые платформы и разделы</h2>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700">
+          <h3 class="font-semibold text-indigo-400">Мобильные</h3>
+          <ul class="mt-2 text-slate-300 text-sm space-y-1">
+            <li>• iOS / iPadOS (iPhone, iPad)</li>
+            <li>• Android (телефоны и планшеты)</li>
+            <li>• watchOS (Apple Watch)</li>
+            <li>• Wear OS</li>
+          </ul>
+        </div>
+        <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700">
+          <h3 class="font-semibold text-indigo-400">Десктоп</h3>
+          <ul class="mt-2 text-slate-300 text-sm space-y-1">
+            <li>• Windows 10/11</li>
+            <li>• macOS</li>
+            <li>• Linux (Ubuntu, Fedora, Arch...)</li>
+          </ul>
+        </div>
+        <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700">
+          <h3 class="font-semibold text-indigo-400">Другие</h3>
+          <ul class="mt-2 text-slate-300 text-sm space-y-1">
+            <li>• tvOS / Apple TV</li>
+            <li>• visionOS</li>
+            <li>• Web / Progressive Web Apps</li>
+            <li>• Кроссплатформенные (Flutter, Electron, Tauri)</li>
+          </ul>
+        </div>
+        <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700">
+          <h3 class="font-semibold text-indigo-400">Категории</h3>
+          <ul class="mt-2 text-slate-300 text-sm space-y-1">
+            <li>• Инструменты, Разработка, Браузеры</li>
+            <li>• Медиа, Эмуляторы, Игры</li>
+            <li>• Продуктивность, Общение, Образование</li>
+            <li>• Безопасность, Утилиты, Системные</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-800 mt-16 py-8 text-center text-slate-500 text-sm">
+    <p>UniversalAppStore — только свободное и открытое ПО. Никакого пиратства.</p>
+    <p class="mt-1">Репозиторий: <a href="https://github.com/superyaroslav8-arch/UniversalAppStore" class="text-indigo-400">GitHub</a></p>
+  </footer>
+
+  <script>
+    // Curated multi-platform open-source / free apps catalog (expandable)
+    const APPS = [
+      // iOS / Open Source
+      { id:1, name:"AltStore", platform:"ios", category:"Инструменты", desc:"Альтернативный магазин и sideloading без джейлбрейка", url:"https://altstore.io", tags:["sideload","store"] },
+      { id:2, name:"SideStore", platform:"ios", category:"Инструменты", desc:"Sideloading на устройстве с обновлением по Wi-Fi", url:"https://sidestore.io", tags:["sideload"] },
+      { id:3, name:"Delta", platform:"ios", category:"Эмуляторы", desc:"Эмулятор Nintendo (Game Boy, N64, DS и др.)", url:"https://github.com/rileytestut/Delta", tags:["emulator","games"] },
+      { id:4, name:"Provenance", platform:"ios", category:"Эмуляторы", desc:"Мультисистемный эмулятор ретро-игр", url:"https://github.com/Provenance-Emu/Provenance", tags:["emulator"] },
+      { id:5, name:"Bitwarden", platform:"ios", category:"Безопасность", desc:"Открытый менеджер паролей", url:"https://bitwarden.com", tags:["password","security"] },
+      { id:6, name:"Brave Browser", platform:"ios", category:"Браузеры", desc:"Приватный браузер с блокировкой рекламы", url:"https://brave.com", tags:["browser","privacy"] },
+      { id:7, name:"Organic Maps", platform:"ios", category:"Навигация", desc:"Офлайн-карты на основе OpenStreetMap", url:"https://organicmaps.app", tags:["maps","offline"] },
+      { id:8, name:"VLC", platform:"ios", category:"Медиа", desc:"Мощный медиаплеер всех форматов", url:"https://www.videolan.org/vlc/", tags:["player","media"] },
+      { id:9, name:"Signal", platform:"ios", category:"Общение", desc:"Защищённый мессенджер", url:"https://signal.org", tags:["messenger","privacy"] },
+      { id:10, name:"DuckDuckGo", platform:"ios", category:"Браузеры", desc:"Приватный поиск и браузер", url:"https://duckduckgo.com", tags:["privacy","search"] },
+      // Android
+      { id:11, name:"F-Droid", platform:"android", category:"Магазины", desc:"Магазин свободного ПО для Android", url:"https://f-droid.org", tags:["store","foss"] },
+      { id:12, name:"NewPipe", platform:"android", category:"Медиа", desc:"Легкий клиент YouTube без рекламы", url:"https://newpipe.net", tags:["youtube","privacy"] },
+      { id:13, name:"OsmAnd", platform:"android", category:"Навигация", desc:"Мощные офлайн-карты и навигация", url:"https://osmand.net", tags:["maps"] },
+      { id:14, name:"AntennaPod", platform:"android", category:"Медиа", desc:"Открытый подкаст-клиент", url:"https://antennapod.org", tags:["podcast"] },
+      { id:15, name:"Termux", platform:"android", category:"Разработка", desc:"Полноценный Linux-терминал на Android", url:"https://termux.dev", tags:["terminal","linux"] },
+      // Windows
+      { id:16, name:"PowerToys", platform:"windows", category:"Утилиты", desc:"Набор мощных утилит от Microsoft", url:"https://github.com/microsoft/PowerToys", tags:["tools","productivity"] },
+      { id:17, name:"ShareX", platform:"windows", category:"Утилиты", desc:"Скриншоты, запись экрана, загрузка", url:"https://getsharex.com", tags:["screenshot"] },
+      { id:18, name:"Everything", platform:"windows", category:"Поиск", desc:"Мгновенный поиск файлов по имени", url:"https://www.voidtools.com", tags:["search","files"] },
+      { id:19, name:"VLC", platform:"windows", category:"Медиа", desc:"Универсальный медиаплеер", url:"https://www.videolan.org", tags:["player"] },
+      { id:20, name:"LibreOffice", platform:"windows", category:"Офис", desc:"Полноценный офисный пакет", url:"https://www.libreoffice.org", tags:["office"] },
+      // macOS
+      { id:21, name:"IINA", platform:"macos", category:"Медиа", desc:"Современный медиаплеер для macOS", url:"https://iina.io", tags:["player"] },
+      { id:22, name:"Rectangle", platform:"macos", category:"Утилиты", desc:"Управление окнами как в Windows", url:"https://rectangleapp.com", tags:["window"] },
+      { id:23, name:"Homebrew", platform:"macos", category:"Разработка", desc:"Менеджер пакетов для macOS", url:"https://brew.sh", tags:["package"] },
+      // Linux
+      { id:24, name:"GIMP", platform:"linux", category:"Графика", desc:"Мощный редактор изображений", url:"https://www.gimp.org", tags:["image","editor"] },
+      { id:25, name:"Blender", platform:"linux", category:"3D", desc:"Профессиональный 3D-редактор", url:"https://www.blender.org", tags:["3d","cgi"] },
+      { id:26, name:"Kdenlive", platform:"linux", category:"Видео", desc:"Нелинейный видеоредактор", url:"https://kdenlive.org", tags:["video"] },
+      // Web / Cross
+      { id:27, name:"VS Code", platform:"web", category:"Разработка", desc:"Редактор кода (есть web-версия)", url:"https://code.visualstudio.com", tags:["editor","code"] },
+      { id:28, name:"Obsidian", platform:"web", category:"Заметки", desc:"База знаний на Markdown", url:"https://obsidian.md", tags:["notes","pk"] },
+      { id:29, name:"Excalidraw", platform:"web", category:"Рисование", desc:"Виртуальная доска для схем", url:"https://excalidraw.com", tags:["whiteboard"] },
+      { id:30, name:"Uptime Kuma", platform:"linux", category:"Мониторинг", desc:"Самостоятельный мониторинг сервисов", url:"https://github.com/louislam/uptime-kuma", tags:["monitor"] },
+      // More iOS classics
+      { id:31, name:"NetNewsWire", platform:"ios", category:"Новости", desc:"Быстрый RSS-ридер", url:"https://netnewswire.com", tags:["rss"] },
+      { id:32, name:"Working Copy", platform:"ios", category:"Разработка", desc:"Git-клиент для iOS", url:"https://workingcopy.app", tags:["git"] },
+      { id:33, name:"a-Shell", platform:"ios", category:"Разработка", desc:"Локальный терминал и скрипты на iOS", url:"https://holzschu.github.io/a-Shell_iOS/", tags:["terminal"] },
+      { id:34, name:"Tachiyomi / Mihon", platform:"android", category:"Комиксы", desc:"Читалка манги с источниками", url:"https://mihon.app", tags:["manga"] },
+      { id:35, name:"Syncthing", platform:"android", category:"Синхронизация", desc:"P2P синхронизация файлов", url:"https://syncthing.net", tags:["sync"] },
+      { id:36, name:"KeePassXC", platform:"windows", category:"Безопасность", desc:"Локальный менеджер паролей", url:"https://keepassxc.org", tags:["password"] },
+      { id:37, name:"Darktable", platform:"linux", category:"Фото", desc:"Обработка RAW фотографий", url:"https://www.darktable.org", tags:["photo","raw"] },
+      { id:38, name:"Jellyfin", platform:"linux", category:"Медиа", desc:"Самостоятельный медиасервер", url:"https://jellyfin.org", tags:["server","media"] },
+      { id:39, name:"Nextcloud", platform:"linux", category:"Облако", desc:"Свой облачный диск и сервисы", url:"https://nextcloud.com", tags:["cloud"] },
+      { id:40, name:"Element", platform:"ios", category:"Общение", desc:"Клиент Matrix (децентрализованный чат)", url:"https://element.io", tags:["matrix","chat"] }
+    ];
+
+    let currentPlatform = 'all';
+    let currentQuery = '';
+
+    function normalize(str) {
+      return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    // Smart scoring search
+    function scoreApp(app, q) {
+      if (!q) return 1;
+      const nq = normalize(q);
+      const name = normalize(app.name);
+      const desc = normalize(app.desc);
+      const cat = normalize(app.category);
+      const tags = (app.tags || []).map(normalize).join(' ');
+      const plat = normalize(app.platform);
+
+      let score = 0;
+      if (name === nq) score += 100;
+      if (name.startsWith(nq)) score += 50;
+      if (name.includes(nq)) score += 30;
+      if (desc.includes(nq)) score += 15;
+      if (cat.includes(nq)) score += 10;
+      if (tags.includes(nq)) score += 12;
+      if (plat.includes(nq)) score += 8;
+
+      // Multi-word
+      nq.split(/\s+/).forEach(word => {
+        if (word.length < 2) return;
+        if (name.includes(word)) score += 8;
+        if (desc.includes(word)) score += 4;
+        if (tags.includes(word)) score += 5;
+      });
+
+      return score;
+    }
+
+    function renderApps() {
+      const grid = document.getElementById('appGrid');
+      const countEl = document.getElementById('resultsCount');
+      let list = APPS.filter(a => currentPlatform === 'all' || a.platform === currentPlatform);
+
+      if (currentQuery.trim()) {
+        list = list
+          .map(a => ({ ...a, _score: scoreApp(a, currentQuery) }))
+          .filter(a => a._score > 0)
+          .sort((a, b) => b._score - a._score);
+      }
+
+      document.getElementById('statApps').textContent = APPS.length;
+      countEl.textContent = `Найдено: ${list.length} приложений`;
+
+      if (list.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-16 text-slate-500">Ничего не найдено. Попробуй другой запрос или платформу.</div>`;
+        return;
+      }
+
+      grid.innerHTML = list.map(app => `
+        <div class="card bg-slate-800/80 border border-slate-700 rounded-2xl p-5 transition duration-300">
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="font-semibold text-lg leading-tight">${app.name}</h3>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 shrink-0">${app.platform}</span>
+          </div>
+          <p class="text-xs text-indigo-300 mt-1">${app.category}</p>
+          <p class="text-sm text-slate-400 mt-3 line-clamp-2">${app.desc}</p>
+          <div class="mt-4 flex gap-2">
+            <a href="${app.url}" target="_blank" rel="noopener" 
+               class="flex-1 text-center py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-medium transition">
+              Открыть
+            </a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function showSection(id) {
+      ['catalog','guides','platforms'].forEach(s => {
+        document.getElementById(s).classList.toggle('hidden', s !== id);
+      });
+      if (id === 'catalog') renderApps();
+    }
+
+    // Events
+    document.getElementById('searchInput').addEventListener('input', e => {
+      currentQuery = e.target.value;
+      renderApps();
+    });
+
+    document.querySelectorAll('.platform-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.platform-btn').forEach(b => {
+          b.classList.remove('bg-indigo-600', 'active');
+          b.classList.add('bg-slate-700');
+        });
+        btn.classList.add('bg-indigo-600', 'active');
+        btn.classList.remove('bg-slate-700');
+        currentPlatform = btn.dataset.platform;
+        renderApps();
+      });
+    });
+
+    // Init
+    renderApps();
+  </script>
+</body>
+</html>
